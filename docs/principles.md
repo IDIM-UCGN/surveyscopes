@@ -35,7 +35,8 @@ Implementation details follow in [architecture.md](architecture.md).
 10. **Language in the URL path**: `/de/…`, `/en/…`. URLs without a language
     redirect according to the browser language, falling back to English
     (or the instance's default language).
-11. **Language chooser only at the bottom of the page** (footer).
+11. **Language chooser only at the bottom of the page**: a dropdown in the
+    footer, without a visible "Language:" label.
 
 ## Content and administration
 
@@ -43,20 +44,25 @@ Implementation details follow in [architecture.md](architecture.md).
 13. The **site admin** sets the **front page information**, decides on the
     **public list of surveys**, and maintains the **imprint** and **privacy
     policy** content – per language, without touching code.
+14. Page contents and preferences are **user data** (database), not code:
+    an instance may seed them initially, but deployments never overwrite
+    what the site admin has changed.
+15. **SEO-optimised** by default: canonical URLs, `hreflang`, meta
+    descriptions, Open Graph, structured data, sitemap and robots.txt.
 
 ## Instances and updates
 
-14. Each instance **downloads the official core release** and adds its own
+16. Each instance **downloads the official core release** and adds its own
     preferences on top; it never forks the core code.
-15. A new core version is **accepted per instance** (pull request in the
+17. A new core version is **accepted per instance** (pull request in the
     instance repository) and then deployed automatically.
-16. **Updates never lose data**: survey data, responses, user uploads and
+18. **Updates never lose data**: survey data, responses, user uploads and
     server-side settings are preserved across every update – on every instance.
     See [instances.md](instances.md).
 
 ## Privacy and security
 
-17. **Privacy by design**: no tracking, no analytics, no cookies for
+19. **Privacy by design**: no tracking, no analytics, no cookies for
     participants; only data that a survey actually needs is stored.
-18. Secure defaults: escaped output, prepared statements, CSRF protection,
+20. Secure defaults: escaped output, prepared statements, CSRF protection,
     strict security headers, internal directories never web-accessible.

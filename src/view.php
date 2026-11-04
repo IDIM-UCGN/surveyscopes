@@ -28,6 +28,14 @@ function url(string $page = 'index', ?string $locale = null, bool $absolute = fa
     return $base . $path;
 }
 
+/** Absolute URL without language prefix (x-default, sitemap, robots). */
+function url_default(string $page = 'index'): string
+{
+    $absolute = url('index', default_locale(), true);
+    $base = substr($absolute, 0, -strlen('/' . default_locale() . '/'));
+    return $base . '/' . ($page === 'index' ? '' : $page);
+}
+
 function current_page(): string
 {
     return $GLOBALS['ss_page'] ?? 'index';
@@ -73,10 +81,16 @@ function markup(string $text): string
     $html = '';
     foreach (preg_split("/\R{2,}/", trim(str_replace("\r", '', $text))) as $block) {
         $lines = explode("\n", $block);
-        if (preg_match('/^(#{1,2}) (.+)$/', $lines[0], $m) === 1 && count($lines) === 1) {
+        // A heading line may be followed directly by its text (no blank line).
+        if (preg_match('/^(#{1,2}) (.+)$/', $lines[0], $m) === 1) {
             $level = strlen($m[1]) + 1;
             $html .= "<h{$level}>" . $inline($m[2]) . "</h{$level}>\n";
-        } elseif (array_filter($lines, fn ($l) => !str_starts_with($l, '- ')) === []) {
+            array_shift($lines);
+            if ($lines === []) {
+                continue;
+            }
+        }
+        if (array_filter($lines, fn ($l) => !str_starts_with($l, '- ')) === []) {
             $html .= "<ul>\n" . implode('', array_map(
                 fn ($l) => '<li>' . $inline(substr($l, 2)) . "</li>\n",
                 $lines

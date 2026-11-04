@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   lint:
-    name: PHP ${{ matrix.php }}
+    name: PHP ${{ matrix.php }} lint + smoke (no DB)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,13 +24,70 @@ jobs:
           tools: none
       - name: Syntax check
         run: find . -path ./.git -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
-      - name: Smoke test (built-in server)
+      - name: Smoke test (built-in server, no database)
         run: |
           php -S 127.0.0.1:8000 tools/dev-router.php >/dev/null 2>&1 &
           sleep 1
-          for path in /en/ /de/ /en/surveys /de/imprint /en/privacy; do
+          for path in /en/ /de/ /en/surveys /de/imprint /en/privacy /sitemap.xml /robots.txt; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000$path")
             echo "GET $path -> $code"; [ "$code" = 200 ] || exit 1
           done
-          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/config/defaults.php)
-          echo "GET /config/defaults.php -> $code"; [ "$code" = 404 ] || exit 1
+          for path in /config/defaults.php /src/bootstrap.php /fr/; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000$path")
+            echo "GET $path -> $code"; [ "$code" = 404 ] || exit 1
+          done
+
+  mysql:
+    name: Migrations + seed (MySQL 8.4)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: surveyscopes
+          MYSQL_USER: ss
+          MYSQL_PASSWORD: ss
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql
+          coverage: none
+          tools: none
+      - name: Test config with seed v1
+        run: |
+          cat > config/secrets.php <<'EOF'
+          <?php return ['database' => ['host' => '127.0.0.1', 'port' => 3306, 'name' => 'surveyscopes', 'user' => 'ss', 'password' => 'ss']];
+          EOF
+          cat > config/instance.php <<'EOF'
+          <?php return ['seed' => ['version' => (int) (getenv('SEED_VERSION') ?: 1),
+            'settings' => ['site_name' => 'CI Instance', 'show_survey_list' => true],
+            'pages' => [
+              'front' => ['en' => ['title' => 'Seed headline v' . (getenv('SEED_VERSION') ?: 1), 'body' => "Intro.\n\n## More\nText."]],
+              'imprint' => ['en' => ['title' => 'Imprint', 'body' => 'Seed imprint v' . (getenv('SEED_VERSION') ?: 1)]],
+            ]]];
+          EOF
+      - name: Migrate twice (idempotent)
+        run: php tools/migrate.php && php tools/migrate.php
+      - name: Admin edit survives a newer seed
+        run: |
+          mysql -h 127.0.0.1 -uss -pss surveyscopes -e "UPDATE page_translations SET body='Admin imprint', source='admin' WHERE page_key='imprint'"
+          SEED_VERSION=2 php tools/migrate.php
+          imprint=$(mysql -h 127.0.0.1 -uss -pss surveyscopes -N -e "SELECT body FROM page_translations WHERE page_key='imprint'")
+          front=$(mysql -h 127.0.0.1 -uss -pss surveyscopes -N -e "SELECT title FROM page_translations WHERE page_key='front'")
+          echo "imprint=$imprint front=$front"
+          [ "$imprint" = "Admin imprint" ] && [ "$front" = "Seed headline v2" ]
+      - name: Pages render from the database
+        run: |
+          SEED_VERSION=2 php -S 127.0.0.1:8000 tools/dev-router.php >/dev/null 2>&1 &
+          sleep 1
+          curl -sf http://127.0.0.1:8000/en/ | grep -q 'Seed headline v2'
+          curl -sf http://127.0.0.1:8000/en/imprint | grep -q 'Admin imprint'
+          curl -sf http://127.0.0.1:8000/en/ | grep -q '<title>Seed headline v2 – CI Instance</title>'
+          curl -sf http://127.0.0.1:8000/sitemap.xml | grep -q '/en/imprint'

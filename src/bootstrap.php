@@ -7,9 +7,27 @@ const SS_ROOT = __DIR__ . '/..';
 require __DIR__ . '/config.php';
 require __DIR__ . '/view.php';
 require __DIR__ . '/i18n.php';
+require __DIR__ . '/db.php';
+require __DIR__ . '/migrate.php';
+require __DIR__ . '/content.php';
 
 $GLOBALS['ss_config'] = load_config(SS_ROOT . '/config');
 date_default_timezone_set((string) config('timezone', 'UTC'));
+
+// Uncaught errors: log details, show a neutral page (no internals to visitors).
+set_exception_handler(static function (Throwable $e): void {
+    error_log('[surveyscopes] ' . $e::class . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    if (!headers_sent()) {
+        http_response_code(503);
+        header('Retry-After: 120');
+        header('Content-Type: text/html; charset=utf-8');
+    }
+    if (!isset($GLOBALS['ss_strings'])) {
+        set_locale(browser_locale());
+    }
+    $GLOBALS['ss_status_page'] = 'error';
+    require SS_ROOT . '/templates/status.php';
+});
 
 // Maintenance mode during deployments (see docs/instances.md)
 if (is_file(SS_ROOT . '/.maintenance')) {
@@ -17,9 +35,12 @@ if (is_file(SS_ROOT . '/.maintenance')) {
     http_response_code(503);
     header('Retry-After: 60');
     header('Content-Type: text/html; charset=utf-8');
-    require SS_ROOT . '/templates/maintenance.php';
+    $GLOBALS['ss_status_page'] = 'maintenance';
+    require SS_ROOT . '/templates/status.php';
     exit;
 }
+
+ensure_schema();
 
 /**
  * Start a page: take the locale from the URL prefix, or redirect

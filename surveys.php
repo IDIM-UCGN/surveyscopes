@@ -7,5 +7,6 @@ page('surveys');
 
 render('surveys', [
     'pageTitle' => tr('surveys.title'),
+    'pageDescription' => tr('surveys.lead'),
     'surveys' => [], // database-backed list follows with the survey module
 ]);

@@ -25,6 +25,11 @@ ErrorDocument 404 /404.php
     RewriteRule ^(src|templates|lang|config|data|uploads|tools|docs)(/|$) - [R=404,L]
     RewriteRule ^(VERSION|\.maintenance)$ - [R=404,L]
 
+    # SEO files
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
+    RewriteRule ^robots\.txt$ robots.php [L]
+    RewriteRule ^(sitemap|robots)/?$ - [R=404,L]
+
     # 3. Remove .php from direct requests
     RewriteCond %{THE_REQUEST} \s/+(.*?/)?index\.php[\s?] [NC]
     RewriteRule ^ /%1 [R=301,L,NE]

@@ -5,6 +5,8 @@ declare(strict_types=1);
 return [
     '_name' => 'English',
 
+    '_og_locale' => 'en_US',
+
     'front.title' => 'Online surveys',
     'front.headline' => 'Surveys – simple, open and privacy-friendly',
     'front.intro' => 'SurveyScopes is an open-source platform for creating and conducting online surveys. No tracking, no third-party services – your data stays on this server.',
@@ -26,11 +28,16 @@ return [
     'legal.missing' => 'This content has not been provided yet.',
 
     'footer.language' => 'Language',
+    'footer.language_go' => 'Go',
+    'front.features' => 'Features',
     'footer.powered' => 'Powered by SurveyScopes',
 
     '404.title' => 'Page not found',
     '404.text' => 'The page you are looking for does not exist or has been moved.',
     '404.back' => 'Back to the home page',
+
+    'error.title' => 'Temporarily unavailable',
+    'error.text' => 'Something went wrong. Please try again in a few minutes.',
 
     'maintenance.title' => 'Maintenance',
     'maintenance.text' => 'This site is being updated and will be back in a moment.',

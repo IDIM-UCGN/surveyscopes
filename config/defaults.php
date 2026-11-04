@@ -15,18 +15,31 @@ return [
     'timezone' => 'UTC',
     'custom_css' => null,
 
-    // Interim front page content until it is managed in the admin area.
-    // Per locale: ['de' => ['headline' => '…', 'intro' => '…']]
-    'front' => [
-        'show_survey_list' => true,
+    'seo' => [
+        'og_image' => '/assets/img/og-image.png',
     ],
 
-    // Interim imprint/privacy: external URLs per locale (or 'default').
-    // Replaced by admin-managed pages once the admin area exists.
-    'legal' => [
-        'imprint_url' => null,
-        'privacy_url' => null,
-    ],
+    /*
+     * Instance seed: initial settings and page contents, copied into the
+     * database on first run (and when 'version' increases). Afterwards the
+     * database is the source of truth; rows edited by the site admin are
+     * never overwritten. Without a database the seed is used read-only.
+     *
+     * 'seed' => [
+     *     'version' => 1,
+     *     'settings' => [
+     *         'site_name' => 'SurveyScopes',
+     *         'site_description' => ['de' => '…', 'en' => '…'],
+     *         'show_survey_list' => true,
+     *     ],
+     *     'pages' => [
+     *         'front'   => ['de' => ['title' => '…', 'body' => '…', 'meta_description' => '…'], 'en' => [/* … *\/]],
+     *         'imprint' => [/* … *\/],
+     *         'privacy' => [/* … *\/],
+     *     ],
+     * ],
+     */
+    'seed' => [],
 
     'app_key' => null,
     'database' => null,

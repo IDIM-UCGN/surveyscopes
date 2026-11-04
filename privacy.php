@@ -5,9 +5,12 @@ declare(strict_types=1);
 require __DIR__ . '/src/bootstrap.php';
 page('privacy');
 
-// Interim: text from config/instance.php ('pages' => ['privacy' => ['de' => '…']]);
-// will be edited by the site admin (page_translations table).
+// Content is managed by the site admin (pages table, key "privacy").
+$content = page_content('privacy');
+
 render('page', [
-    'pageTitle' => tr('privacy.title'),
-    'body' => localized(config('pages.privacy')),
+    'pageTitle' => ($content['title'] ?? '') ?: tr('privacy.title'),
+    'pageDescription' => $content['meta_description'] ?? '',
+    'body' => $content['body'] ?? null,
+    'noIndex' => $content === null,
 ]);

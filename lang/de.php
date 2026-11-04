@@ -5,6 +5,8 @@ declare(strict_types=1);
 return [
     '_name' => 'Deutsch',
 
+    '_og_locale' => 'de_DE',
+
     'front.title' => 'Online-Umfragen',
     'front.headline' => 'Umfragen – einfach, offen und datenschutzfreundlich',
     'front.intro' => 'SurveyScopes ist eine Open-Source-Plattform zum Erstellen und Durchführen von Online-Umfragen. Kein Tracking, keine Drittanbieter – Ihre Daten bleiben auf diesem Server.',
@@ -26,11 +28,16 @@ return [
     'legal.missing' => 'Dieser Inhalt wurde noch nicht hinterlegt.',
 
     'footer.language' => 'Sprache',
+    'footer.language_go' => 'Wechseln',
+    'front.features' => 'Merkmale',
     'footer.powered' => 'Betrieben mit SurveyScopes',
 
     '404.title' => 'Seite nicht gefunden',
     '404.text' => 'Die gesuchte Seite existiert nicht oder wurde verschoben.',
     '404.back' => 'Zur Startseite',
+
+    'error.title' => 'Vorübergehend nicht verfügbar',
+    'error.text' => 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es in einigen Minuten erneut.',
 
     'maintenance.title' => 'Wartung',
     'maintenance.text' => 'Diese Seite wird gerade aktualisiert und ist gleich wieder erreichbar.',

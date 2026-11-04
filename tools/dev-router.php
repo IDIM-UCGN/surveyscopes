@@ -24,6 +24,15 @@ $redirect = static function (string $to) use ($qs): void {
 if (preg_match('#^/(src|templates|lang|config|data|uploads|tools|docs)(/|$)|^/(VERSION|\.maintenance)$#', $path)) {
     $serve('404.php');
 }
+if ($path === '/sitemap.xml') {
+    $serve('sitemap.php');
+}
+if ($path === '/robots.txt') {
+    $serve('robots.php');
+}
+if (preg_match('#^/(sitemap|robots)/?$#', $path)) {
+    $serve('404.php');
+}
 if (preg_match('#^(.*/)?index\.php$#', $path, $m)) {
     $redirect($m[1] ?? '/');
 }

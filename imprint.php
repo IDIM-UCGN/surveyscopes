@@ -5,9 +5,12 @@ declare(strict_types=1);
 require __DIR__ . '/src/bootstrap.php';
 page('imprint');
 
-// Interim: text from config/instance.php ('pages' => ['imprint' => ['de' => '…']]);
-// will be edited by the site admin (page_translations table).
+// Content is managed by the site admin (pages table, key "imprint").
+$content = page_content('imprint');
+
 render('page', [
-    'pageTitle' => tr('imprint.title'),
-    'body' => localized(config('pages.imprint')),
+    'pageTitle' => ($content['title'] ?? '') ?: tr('imprint.title'),
+    'pageDescription' => $content['meta_description'] ?? '',
+    'body' => $content['body'] ?? null,
+    'noIndex' => $content === null,
 ]);
