@@ -23,6 +23,7 @@ Project website: <https://www.surveyscopes.org>
 - [docs/principles.md](docs/principles.md) – the fundamental project decisions
 - [docs/architecture.md](docs/architecture.md) – structure, routing, multi-language, database, security
 - [docs/instances.md](docs/instances.md) – running your own instance and updating it safely
+- [CONTRIBUTING.md](CONTRIBUTING.md) – how to submit changes (fork + pull request)
 
 ## Requirements
 
