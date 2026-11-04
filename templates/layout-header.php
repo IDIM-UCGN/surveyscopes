@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 /**
  * SEO head + site header.
- * Page variables: $pageTitle, $pageDescription, $noIndex (bool), $jsonLd (array|null)
+ * Page variables: $pageTitle, $pageDescription, $noIndex (bool), $noFollow (bool), $jsonLd (array|null)
  */
 $siteName = site_name();
 $fullTitle = ($pageTitle ?? '') !== '' && $pageTitle !== $siteName ? $pageTitle . ' – ' . $siteName : $siteName;
 $description = trim((string) ($pageDescription ?? '')) ?: (string) setting('site_description', '');
 $noIndex = $noIndex ?? false;
+$noFollow = $noFollow ?? false;
+$robots = $noIndex ? 'noindex, ' . ($noFollow ? 'nofollow' : 'follow') : null;
+if ($robots !== null) {
+    header('X-Robots-Tag: ' . $robots);
+}
 $canonical = url(current_page(), lang(), true);
 $ogImage = (string) setting('og_image', config('seo.og_image', '/assets/img/og-image.png'));
 if (str_starts_with($ogImage, '/')) {
@@ -26,7 +31,7 @@ if (str_starts_with($ogImage, '/')) {
     <meta name="description" content="<?= e($description) ?>">
 <?php endif; ?>
 <?php if ($noIndex): ?>
-    <meta name="robots" content="noindex, follow">
+    <meta name="robots" content="<?= e($robots) ?>">
 <?php else: ?>
     <link rel="canonical" href="<?= e($canonical) ?>">
 <?php foreach (locales() as $code): ?>

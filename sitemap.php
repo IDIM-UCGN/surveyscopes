@@ -5,12 +5,8 @@ declare(strict_types=1);
 require __DIR__ . '/src/bootstrap.php';
 set_locale(default_locale());
 
+// Imprint and privacy are noindex and therefore not listed.
 $pages = ['index', 'surveys'];
-foreach (['imprint', 'privacy'] as $legal) {
-    if (page_content($legal) !== null) {
-        $pages[] = $legal;
-    }
-}
 
 header('Content-Type: application/xml; charset=utf-8');
 echo '<?xml version="1.0" encoding="UTF-8"?>', "\n";

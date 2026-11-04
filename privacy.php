@@ -12,5 +12,7 @@ render('page', [
     'pageTitle' => ($content['title'] ?? '') ?: tr('privacy.title'),
     'pageDescription' => $content['meta_description'] ?? '',
     'body' => $content['body'] ?? null,
-    'noIndex' => $content === null,
+    // Legal pages are kept out of search engines.
+    'noIndex' => true,
+    'noFollow' => true,
 ]);

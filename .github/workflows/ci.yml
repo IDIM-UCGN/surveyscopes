@@ -32,6 +32,11 @@ jobs:
             code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000$path")
             echo "GET $path -> $code"; [ "$code" = 200 ] || exit 1
           done
+          for path in /de/imprint /en/privacy; do
+            curl -s "http://127.0.0.1:8000$path" | grep -q '<meta name="robots" content="noindex, nofollow">' || { echo "$path: robots meta missing"; exit 1; }
+            curl -sI "http://127.0.0.1:8000$path" | grep -qi '^x-robots-tag: noindex, nofollow' || { echo "$path: X-Robots-Tag missing"; exit 1; }
+          done
+          ! curl -s http://127.0.0.1:8000/sitemap.xml | grep -Eq '/(imprint|privacy)<' || { echo "legal pages in sitemap"; exit 1; }
           for path in /config/defaults.php /src/bootstrap.php /fr/; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000$path")
             echo "GET $path -> $code"; [ "$code" = 404 ] || exit 1
