@@ -60,15 +60,17 @@ if (str_starts_with($ogImage, '/')) {
 </head>
 <body class="d-flex flex-column min-vh-100">
 <header class="site-header">
-    <nav class="navbar navbar-expand container" aria-label="<?= e($siteName) ?>">
-        <a class="navbar-brand site-brand" href="<?= e(url()) ?>">
-            <img src="/assets/img/logo.svg" alt="" width="32" height="32">
-            <span><?= e($siteName) ?></span>
-        </a>
-        <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-                <a class="nav-link<?= current_page() === 'surveys' ? ' active' : '' ?>" href="<?= e(url('surveys')) ?>"<?= current_page() === 'surveys' ? ' aria-current="page"' : '' ?>><?= t('surveys.title') ?></a>
-            </li>
-        </ul>
+    <nav class="navbar navbar-expand" aria-label="<?= e($siteName) ?>">
+        <div class="container flex-wrap gap-2">
+            <a class="navbar-brand site-brand me-auto" href="<?= e(url()) ?>">
+                <img src="/assets/img/logo.svg" alt="" width="32" height="32">
+                <span><?= e($siteName) ?></span>
+            </a>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link<?= current_page() === 'surveys' ? ' active' : '' ?>" href="<?= e(url('surveys')) ?>"<?= current_page() === 'surveys' ? ' aria-current="page"' : '' ?>><?= t('surveys.title') ?></a>
+                </li>
+            </ul>
+        </div>
     </nav>
 </header>
