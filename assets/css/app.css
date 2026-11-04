@@ -145,6 +145,7 @@ body {
     border-radius: 999px;
 }
 
-.front-more h2 {
+.front-more h2,
+.content-page h2 {
     font-size: 1.5rem;
 }

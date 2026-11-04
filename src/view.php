@@ -62,7 +62,8 @@ function not_found(): void
 
 /**
  * Minimal, safe text markup for admin-managed content:
- * blank line = paragraph, "# " / "## " headings, "- " lists,
+ * blank line = paragraph, "## " section heading (h2), "### " sub-heading (h3),
+ * "- " lists,
  * **bold**, *italic*, [text](https://…). Everything is escaped first.
  */
 function markup(string $text): string
@@ -82,8 +83,8 @@ function markup(string $text): string
     foreach (preg_split("/\R{2,}/", trim(str_replace("\r", '', $text))) as $block) {
         $lines = explode("\n", $block);
         // A heading line may be followed directly by its text (no blank line).
-        if (preg_match('/^(#{1,2}) (.+)$/', $lines[0], $m) === 1) {
-            $level = strlen($m[1]) + 1;
+        if (preg_match('/^(#{1,3}) (.+)$/', $lines[0], $m) === 1) {
+            $level = max(2, strlen($m[1])); // the page title is the only <h1>
             $html .= "<h{$level}>" . $inline($m[2]) . "</h{$level}>\n";
             array_shift($lines);
             if ($lines === []) {

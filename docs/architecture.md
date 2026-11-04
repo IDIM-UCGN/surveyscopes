@@ -161,7 +161,7 @@ Stored in the database, edited under `admin/pages.php` and `admin/settings.php`:
   a notice to admins and a 404 to visitors.
 - **Site settings**: site name, contact e-mail, available/default languages.
 
-Text content uses a **minimal markup** (paragraphs, `#`/`##` headings,
+Text content uses a **minimal markup** (paragraphs, `##`/`###` headings → `<h2>`/`<h3>`,
 `**bold**`, `*italic*`, lists, links) rendered by `src/view.php`.
 Everything is HTML-escaped first; no raw HTML is stored or output.
 
