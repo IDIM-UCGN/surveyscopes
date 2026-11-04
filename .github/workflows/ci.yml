@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.0', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: none
+      - name: Syntax check
+        run: find . -path ./.git -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Smoke test (built-in server)
+        run: |
+          php -S 127.0.0.1:8000 tools/dev-router.php >/dev/null 2>&1 &
+          sleep 1
+          for path in /en/ /de/ /en/surveys /de/imprint /en/privacy; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000$path")
+            echo "GET $path -> $code"; [ "$code" = 200 ] || exit 1
+          done
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/config/defaults.php)
+          echo "GET /config/defaults.php -> $code"; [ "$code" = 404 ] || exit 1

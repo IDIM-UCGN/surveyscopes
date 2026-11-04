@@ -1,0 +1,139 @@
+/*
+ * SurveyScopes default theme – modern green.
+ * Instances adjust colours via config 'custom_css' by overriding the --ss-* tokens.
+ */
+
+:root {
+    --ss-green: #0f8a5f;
+    --ss-green-dark: #0b6b4a;
+    --ss-green-soft: #e8f5ef;
+    --ss-ink: #14231c;
+    --ss-muted: #5b6b63;
+    --ss-surface: #ffffff;
+    --ss-ground: #f6f9f7;
+    --ss-border: #dbe6e0;
+    --ss-radius: 1rem;
+
+    --bs-primary: var(--ss-green);
+    --bs-primary-rgb: 15, 138, 95;
+    --bs-link-color: var(--ss-green-dark);
+    --bs-link-color-rgb: 11, 107, 74;
+    --bs-link-hover-color: var(--ss-green);
+    --bs-body-color: var(--ss-ink);
+    --bs-body-bg: var(--ss-ground);
+    --bs-border-color: var(--ss-border);
+    --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+    background: var(--ss-ground);
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--ss-green);
+    --bs-btn-border-color: var(--ss-green);
+    --bs-btn-hover-bg: var(--ss-green-dark);
+    --bs-btn-hover-border-color: var(--ss-green-dark);
+    --bs-btn-active-bg: var(--ss-green-dark);
+    --bs-btn-active-border-color: var(--ss-green-dark);
+    --bs-btn-focus-shadow-rgb: 15, 138, 95;
+    border-radius: 999px;
+    padding-inline: 1.5rem;
+}
+
+/* Header */
+.site-header {
+    background: var(--ss-surface);
+    border-bottom: 1px solid var(--ss-border);
+}
+
+.site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    font-weight: 700;
+    color: var(--ss-ink);
+}
+
+.site-header .nav-link {
+    color: var(--ss-muted);
+    font-weight: 500;
+}
+
+.site-header .nav-link.active,
+.site-header .nav-link:hover {
+    color: var(--ss-green-dark);
+}
+
+/* Hero */
+.hero {
+    background:
+        radial-gradient(circle at 85% 20%, rgba(15, 138, 95, .18), transparent 45%),
+        linear-gradient(180deg, var(--ss-green-soft), var(--ss-ground));
+}
+
+.hero h1 {
+    letter-spacing: -.02em;
+}
+
+.hero .lead p:last-child {
+    margin-bottom: 0;
+}
+
+/* Cards and lists */
+.feature-card {
+    background: var(--ss-surface);
+    border: 1px solid var(--ss-border);
+    border-radius: var(--ss-radius);
+    padding: 1.5rem;
+    box-shadow: 0 1px 2px rgba(20, 35, 28, .04);
+}
+
+.feature-card h2::before {
+    content: "";
+    display: block;
+    width: 2.25rem;
+    height: .3rem;
+    border-radius: 999px;
+    background: var(--ss-green);
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: var(--ss-muted);
+}
+
+.survey-list {
+    border-radius: var(--ss-radius);
+}
+
+.empty-state {
+    background: var(--ss-surface);
+    border: 1px dashed var(--ss-border);
+    border-radius: var(--ss-radius);
+    padding: 1.5rem;
+    color: var(--ss-muted);
+}
+
+.content-page {
+    max-width: 48rem;
+}
+
+.content-page h2 {
+    margin-top: 2rem;
+    font-size: 1.35rem;
+}
+
+/* Footer */
+.site-footer {
+    background: var(--ss-surface);
+    border-top: 1px solid var(--ss-border);
+}
+
+.site-footer a {
+    color: var(--ss-green-dark);
+}
+
+.footer-muted {
+    color: var(--ss-muted);
+}

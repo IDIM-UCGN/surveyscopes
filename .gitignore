@@ -1,0 +1,10 @@
+data/
+uploads/
+config/instance.php
+config/secrets.php
+config/local.php
+.maintenance
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

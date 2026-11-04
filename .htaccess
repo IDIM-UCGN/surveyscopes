@@ -1,0 +1,62 @@
+# SurveyScopes – Apache configuration (requires mod_rewrite)
+
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+AddDefaultCharset UTF-8
+ErrorDocument 403 /404.php
+ErrorDocument 404 /404.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # 1. Canonical host: example.org -> https://www.example.org (skipped for localhost / IPs)
+    RewriteCond %{HTTP_HOST} !^www\. [NC]
+    RewriteCond %{HTTP_HOST} !^(localhost|[0-9.]+|\[.*\])(:[0-9]+)?$ [NC]
+    RewriteCond %{HTTP_HOST} ^(.+)$
+    RewriteRule ^ https://www.%1%{REQUEST_URI} [R=301,L,NE]
+
+    RewriteCond %{HTTP_HOST} ^www\. [NC]
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L,NE]
+
+    # 2. Internal files and directories are never served
+    RewriteRule ^(src|templates|lang|config|data|uploads|tools|docs)(/|$) - [R=404,L]
+    RewriteRule ^(VERSION|\.maintenance)$ - [R=404,L]
+
+    # 3. Remove .php from direct requests
+    RewriteCond %{THE_REQUEST} \s/+(.*?/)?index\.php[\s?] [NC]
+    RewriteRule ^ /%1 [R=301,L,NE]
+    RewriteCond %{THE_REQUEST} \s/+([^\s?]+?)\.php[\s?] [NC]
+    RewriteRule ^ /%1 [R=301,L,NE]
+
+    # 4. Language prefix (/de/, /en/, ...) – PHP validates the code
+    RewriteRule ^([a-z]{2})$ /$1/ [R=301,L]
+    RewriteRule ^([a-z]{2})/index/?$ /$1/ [R=301,L]
+    RewriteRule ^([a-z]{2})/([a-z][a-z0-9-]*)/$ /$1/$2 [R=301,L]
+    RewriteRule ^([a-z]{2})/$ index.php [L]
+    RewriteRule ^([a-z]{2})/survey/([a-z0-9-]+)$ survey.php?slug=$2 [L,QSA]
+    RewriteCond %{DOCUMENT_ROOT}/$2.php -f
+    RewriteRule ^([a-z]{2})/([a-z][a-z0-9-]*)$ $2.php [L]
+
+    # 5. Pages without language prefix -> PHP redirects by browser language
+    RewriteCond %{DOCUMENT_ROOT}/$1.php -f
+    RewriteRule ^([a-z][a-z0-9-]*)/?$ $1.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+    Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/svg+xml "access plus 1 week"
+</IfModule>
