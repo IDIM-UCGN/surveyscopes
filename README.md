@@ -8,6 +8,18 @@ Project website: <https://www.surveyscopes.org>
 > list placeholder, imprint/privacy, languages). Database, admin area and
 > surveys follow.
 
+## How to contribute
+
+1. **Fork** this repository on GitHub and clone your fork.
+2. **Create a branch** (`feature/…`, `fix/…`, `docs/…`), make your change and test it locally.
+3. **Commit and push** to your fork:
+   `git commit -m "Short, meaningful description"` → `git push origin <branch>`
+4. **Open a pull request** against `IDIM-UCGN/surveyscopes` → `main`.
+   A maintainer reviews and merges it (squash, one commit per pull request); instances pick up the change with the next release.
+
+Only the two maintainers push to `main` directly. No credentials or personal
+data in commits. Details: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## At a glance
 
 - **PHP 8** and **MySQL** (current release) – no other runtime dependencies by default
