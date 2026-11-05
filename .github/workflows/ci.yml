@@ -95,4 +95,4 @@ jobs:
           curl -sf http://127.0.0.1:8000/en/ | grep -q 'Seed headline v2'
           curl -sf http://127.0.0.1:8000/en/imprint | grep -q 'Admin imprint'
           curl -sf http://127.0.0.1:8000/en/ | grep -q '<title>Seed headline v2 – CI Instance</title>'
-          curl -sf http://127.0.0.1:8000/sitemap.xml | grep -q '/en/imprint'
+          if curl -sf http://127.0.0.1:8000/sitemap.xml | grep -q '/en/imprint'; then echo 'imprint must not be in sitemap'; exit 1; fi
