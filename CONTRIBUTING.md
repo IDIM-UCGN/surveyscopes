@@ -26,18 +26,6 @@ arrives as a pull request from a fork and is reviewed before it is merged.
    git remote add upstream https://github.com/IDIM-UCGN/surveyscopes.git
    ```
 
-3. **Commit with your university email.** You may use a private GitHub
-   account, but commits must always carry your `@uni-koeln.de` address.
-   Set it for this clone only (no `--global`):
-
-   ```sh
-   git config user.name "First Last"
-   git config user.email "<name>@uni-koeln.de"
-   ```
-
-   Add the address to your GitHub account (*Settings → Emails*) so commits are
-   linked to your profile.
-
 ## For every change
 
 1. **Update your fork:**

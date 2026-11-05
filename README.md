@@ -10,9 +10,7 @@ Project website: <https://www.surveyscopes.org>
 
 ## How to contribute
 
-1. **Fork** this repository on GitHub and clone your fork. A private GitHub
-   account is fine, but set your **university email** for commits in this clone:
-   `git config user.email "<name>@uni-koeln.de"`
+1. **Fork** this repository on GitHub and clone your fork.
 2. **Create a branch** (`feature/…`, `fix/…`, `docs/…`), make your change and test it locally.
 3. **Commit and push** to your fork:
    `git commit -m "Short, meaningful description"` → `git push origin <branch>`

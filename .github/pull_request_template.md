@@ -11,4 +11,3 @@
 - [ ] Schema changes only as a new migration in `src/migrations/`
 - [ ] Docs updated if behaviour changed
 - [ ] No credentials or personal data
-- [ ] Commits use my `@uni-koeln.de` email
