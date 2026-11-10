@@ -10,6 +10,10 @@ require __DIR__ . '/i18n.php';
 require __DIR__ . '/db.php';
 require __DIR__ . '/migrate.php';
 require __DIR__ . '/content.php';
+require __DIR__ . '/repositories/Users.php';
+require __DIR__ . '/repositories/LoginAttempts.php';
+require __DIR__ . '/auth.php'; // no session here: only login/admin pages start one
+require __DIR__ . '/csrf.php';
 
 $GLOBALS['ss_config'] = load_config(SS_ROOT . '/config');
 date_default_timezone_set((string) config('timezone', 'UTC'));
