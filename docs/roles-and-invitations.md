@@ -27,8 +27,8 @@ All code stays within the existing rules: PHP 8.0 compatible, no Composer packag
 |---|---|---|
 | 1 | **Principle 19.** No tracking, no analytics, no third-party requests; technically necessary cookies (for example for login) are allowed. | Decided by the maintainers. New wording in section 4. |
 | 2 | **Roles.** `participant` is *not* added to a global role list. Accounts get an admin flag; editor and participant are roles per survey. | Decided; change proposal for `architecture.md` section 6 in section 4. |
-| 3 | **PR (a).** Replace the `role` column by an `is_admin` flag. | Open: a new commit on `feature/auth-core`, or a migration 0003 after the merge (section 13). |
-| 4 | **Timestamps on anonymous responses.** | Open: exact (no deviation) or date only (section 5). Proposed: date only. |
+| 3 | **PR (a).** Replace the `role` column by an `is_admin` flag. | Decided: a migration sql task. |
+| 4 | **Timestamps on anonymous responses.** | Decided: date only. |
 | 5 | **ASCII-only email addresses**, `utf8mb4_bin` collation for email columns. | Decided: yes. |
 | 6 | **Mail.** PHP `mail()` as the first transport. | Decided: yes. |
 
@@ -47,14 +47,15 @@ There are three kinds of access: the global **admin flag**, a **role per survey*
 | View results and exports | all surveys | yes | no | no |
 | See audit entries | all | entries about that survey | no | no |
 | Preview (stores nothing) | yes | yes | no | no |
-| Take the survey | preview only | preview only | identified surveys | anonymous surveys (public or secret link) |
+| Take the survey | identified surveys | identified surveys | identified surveys | anonymous surveys (public or secret link) |
 | Admin area | all pages | survey pages of their surveys | no, "my surveys" page only | no |
 
 - A person has at most one role per survey. They can be editor in one survey and participant in another.
 - The last active admin cannot be demoted, disabled or deleted. This is checked in a transaction with `SELECT ... FOR UPDATE`. Setup and the CLI remain as recovery paths.
 - The admin flag is set only by an admin (or by setup and the CLI). A request field never sets it.
 - Access to a specific survey is always a server-side check on the survey membership, never a rank comparison.
-- Landing page after login: admins go to the dashboard, people with editor roles to their survey list, participants to "my surveys".
+- Landing page after login: one dashboard, but different modular elements (admins settings, surveys).
+- Keep in mind, that a participant account can also get an editor role of a survey and vice versa
 
 ## 4. Changes to existing principles and architecture
 
@@ -68,7 +69,7 @@ Proposed changes to `architecture.md`:
 |---|---|---|
 | §2 | bootstrap starts the session | The session is lazy: it starts only on login, logout, setup, registration and account pages, and is stored in `data/sessions/`. Public pages never set a cookie. |
 | §6 `users` | e-mail, password_hash, role (admin, editor), status | e-mail, password_hash, **is_admin** (flag), status, last_login_at. Email stored normalised, `utf8mb4_bin`, ASCII only. |
-| §6 `surveys` | slug, status, is_public, default_locale, opens/closes at, owner | slug, status, is_public, default_locale, opens/closes at, **created_by**, **answer_mode**, answer_mode_locked_at. The single owner is replaced by editor roles in `survey_members`. |
+| §6 `surveys` | slug, status, is_public, default_locale, opens/closes at, owner | slug, status, is_public, default_locale, opens/closes at, **created_by**, **answer_mode**. The single owner is replaced by editor roles in `survey_members`. |
 | §6 new | none | **`survey_members`**: which account has which role in which survey. |
 | §6 new | none | `invitations`, `invitation_nonces`, `invitation_sends`, `audit_log` (sections 6 and 8). |
 | §6 `responses` | optional anonymous token | Identified mode: `user_id`, draft or submitted. Anonymous mode: no `user_id`, random id, date-only timestamps if decision 4 is accepted. |
@@ -79,7 +80,7 @@ Proposed changes to `architecture.md`:
 
 ## 5. Surveys and answer modes
 
-The editor or admin **must choose** the mode when creating a survey (no default, no preselected option). It is locked at the first answer (`answer_mode_locked_at`); the repository changes it only `WHERE answer_mode_locked_at IS NULL`. The mode is shown on the first page of the survey and stated in the invitation email.
+The editor or admin **must choose** the mode when creating a survey (no default, no preselected option). no lock required. the repository changes it only `WHERE answer_mode_locked_at IS NULL`. The mode is shown on the first page of the survey and stated in the invitation email.
 
 **Anonymous**
 - No login, no cookie, no account involved.
@@ -92,7 +93,7 @@ The editor or admin **must choose** the mode when creating a survey (no default,
 
 **Identified**
 - Login is required. Only members with the role *participant* can answer.
-- `responses.user_id`, status draft or submitted; answers can be resumed and (proposed) edited until the survey closes.
+- `responses.user_id`, status draft (each field saved automatically) or submitted; answers can be resumed and (proposed) edited until the survey closes.
 - Never listed publicly: a database check requires `answer_mode = 'anonymous' OR is_public = 0`.
 - Answers are personal data, so the invitation email says that the answers are linked to the account.
 
@@ -141,7 +142,6 @@ Plain text, UTF-8, language chosen from the survey's translations (default: the 
 - the statement of the answer mode ("your answers are linked to your account");
 - **for a new address:** the email address the invitation is connected to, the registration link and the expiry date;
 - **for an existing account:** a link to the survey;
-- a line saying that the email can be ignored if it was not expected.
 
 ### Registration and accepting a link (participant)
 
