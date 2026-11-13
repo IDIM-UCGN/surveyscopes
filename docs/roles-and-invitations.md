@@ -12,7 +12,7 @@ SurveyScopes keeps people in a **member administration** that is separate from r
 - When a person registers, the email address is matched with the member record. The **admin flag, the status and the survey roles** stored on the member then apply to the new account.
 - An **account** holds only the login credentials. The admin flag lives on the member. Everything else is a **role per survey**: *editor* or *participant*.
 - A **participant** is a person who logs in and can see only the surveys they were added to.
-- Participants are **added by an editor of a survey** when that survey requires a login. The editor finds or creates the member by email address and assigns the role. The person then receives an email with the survey info text:
+- Participants are **added by an editor of a survey** when that survey requires a login. The editor finds or creates the member in member list and assigns the role. The person then receives an email with the survey info text:
   - a member **without an account** gets a **registration link** and is told which email address it is connected to; registering with that address gives access to the survey;
   - a member who is **already registered** gets a link to the survey.
 - Each survey has an **answer mode**:
