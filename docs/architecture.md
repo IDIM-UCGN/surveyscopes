@@ -293,6 +293,9 @@ Optional: `intl` (localised date/number formats).
 - CI: `php -l` and smoke tests on PHP 8.3 and latest 8.x; migrations and seed
   sync (incl. "admin edits survive a newer seed") against a MySQL 8.4 service container.
 - `php tools/migrate.php` applies migrations from the command line.
+- `php tests/run.php` runs the unit tests (no dependencies, no database);
+  `SS_TEST_DB=1 php tests/run.php` adds the database tests, which **empty the
+  member and login tables** – only for a throw-away test database (CI).
 - Coding style: PSR-12, `declare(strict_types=1)`, typed parameters and returns.
 - Releases: semantic version tags `vX.Y.Z` with GitHub release notes; breaking
   changes and new config keys are listed explicitly.

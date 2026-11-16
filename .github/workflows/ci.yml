@@ -24,6 +24,8 @@ jobs:
           tools: none
       - name: Syntax check
         run: find . -path ./.git -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Unit tests (no database)
+        run: php tests/run.php
       - name: Smoke test (built-in server, no database)
         run: |
           php -S 127.0.0.1:8000 tools/dev-router.php >/dev/null 2>&1 &
@@ -96,3 +98,5 @@ jobs:
           curl -sf http://127.0.0.1:8000/en/imprint | grep -q 'Admin imprint'
           curl -sf http://127.0.0.1:8000/en/ | grep -q '<title>Seed headline v2 – CI Instance</title>'
           if curl -sf http://127.0.0.1:8000/sitemap.xml | grep -q '/en/imprint'; then echo 'imprint must not be in sitemap'; exit 1; fi
+      - name: Unit and database tests
+        run: SS_TEST_DB=1 php tests/run.php

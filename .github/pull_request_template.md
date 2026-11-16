@@ -5,6 +5,7 @@
 ## Checklist
 
 - [ ] Tested locally (`php -S localhost:8000 tools/dev-router.php`)
+- [ ] `php tests/run.php` passes; new logic has tests in `tests/`
 - [ ] PHP 8.3 compatible, `declare(strict_types=1);`
 - [ ] No new dependencies, no CDN or external resources
 - [ ] UI strings in all `lang/*.php` files
