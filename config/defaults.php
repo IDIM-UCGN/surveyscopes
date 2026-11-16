@@ -41,6 +41,24 @@ return [
      */
     'seed' => [],
 
+    /*
+     * Admin login. Values must be positive integers; invalid values are
+     * logged and replaced by these defaults. Throttling counts failures
+     * per e-mail+IP ("pair"), per e-mail ("account") and per IP within
+     * window_minutes; IPs are taken from REMOTE_ADDR only and stored as
+     * HMAC hashes (requires app_key, at least 32 characters).
+     */
+    'auth' => [
+        'idle_minutes' => 120,
+        'absolute_hours' => 12,
+        'window_minutes' => 15,
+        'max_attempts_pair' => 5,
+        'max_attempts_account' => 50,
+        'max_attempts_ip' => 30,
+        'max_attempts_setup' => 10,
+        'setup_token_max_age_hours' => 24,
+    ],
+
     'app_key' => null,
     'database' => null,
 ];
