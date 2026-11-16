@@ -39,7 +39,7 @@ data in commits. Details: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Requirements
 
-- PHP ≥ 8.0 with `pdo_mysql`, `mbstring`, `json`, `fileinfo` (optional: `intl`)
+- PHP ≥ 8.3 with `pdo_mysql`, `mbstring`, `json`, `fileinfo` (optional: `intl`)
 - MySQL 8.4 LTS or newer
 - Apache with `mod_rewrite`
 

@@ -36,7 +36,7 @@ All code stays within the existing rules: PHP 8.3 or newer (decision 8), no Comp
 | 5 | **ASCII-only email addresses**, `utf8mb4_bin` collation for email columns. | Decided: yes. |
 | 6 | **Mail.** PHP `mail()` as the first transport. | Decided: yes. |
 | 7 | **Member administration** separate from registration, matched by email address. | Requested by the maintainers. The details in section 6 are proposed. |
-| 8 | **Minimum PHP version.** | Decided: PHP 8.3 (security support until end of 2027). `architecture.md`, README and the CI matrix are updated in their own PR. |
+| 8 | **Minimum PHP version.** | Decided: PHP 8.3 (security support until end of 2027). Applied to `architecture.md`, README, CONTRIBUTING, the PR template and CI; `src/bootstrap.php` refuses older versions. |
 | 9 | **Survey creation.** A second global flag `create_surveys_allowed` on the member, independent of other roles and set like the admin flag. Admins may always create surveys. The creator becomes the first editor. | Decided. |
 | 10 | **Open registration.** Anyone can register; registration always requires proof of mailbox control. Name matching never reveals anything to the registering person; possible duplicates (same name, different email) are shown to admins only, who can merge member records. | Decided. |
 | 11 | **Survey info text** in emails is the survey's own description. | Decided. |

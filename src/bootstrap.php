@@ -2,6 +2,21 @@
 
 declare(strict_types=1);
 
+// Minimum PHP version (docs/architecture.md §1). Checked before anything
+// else, with a clear message instead of an obscure error later on.
+if (PHP_VERSION_ID < 80300) {
+    $message = 'SurveyScopes requires PHP 8.3 or newer; this server runs PHP ' . PHP_VERSION . '.';
+    error_log('[surveyscopes] ' . $message);
+    if (PHP_SAPI === 'cli') {
+        fwrite(STDERR, $message . "\n");
+        exit(1);
+    }
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "500 Internal Server Error\n";
+    exit;
+}
+
 const SS_ROOT = __DIR__ . '/..';
 
 require __DIR__ . '/config.php';

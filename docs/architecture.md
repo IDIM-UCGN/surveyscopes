@@ -9,7 +9,7 @@ documented in this file.
 
 | Principle | Rule |
 |-----------|------|
-| Runtime | **PHP 8** (minimum 8.0, CI tests 8.0 and the latest 8.x) |
+| Runtime | **PHP 8** (minimum 8.3, CI tests 8.3 and the latest 8.x) |
 | Database | **MySQL**, current release (8.4 LTS or newer), InnoDB, `utf8mb4` |
 | Dependencies | **None by default** – no Composer packages, no npm build, no framework |
 | Frontend | **Bootstrap 5**, vendored in the repository; **no CDN**, no external fonts/scripts |
@@ -290,7 +290,7 @@ Optional: `intl` (localised date/number formats).
 ## 12. Development and CI
 
 - Local: `php -S localhost:8000 -t . tools/dev-router.php` (router emulating `.htaccess`).
-- CI: `php -l` and smoke tests on PHP 8.0 and latest 8.x; migrations and seed
+- CI: `php -l` and smoke tests on PHP 8.3 and latest 8.x; migrations and seed
   sync (incl. "admin edits survive a newer seed") against a MySQL 8.4 service container.
 - `php tools/migrate.php` applies migrations from the command line.
 - Coding style: PSR-12, `declare(strict_types=1)`, typed parameters and returns.

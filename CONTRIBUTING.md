@@ -57,7 +57,7 @@ arrives as a pull request from a fork and is reviewed before it is merged.
 4. **Open a pull request** against `IDIM-UCGN/surveyscopes` → `main`,
    fill in the template and keep **“Allow edits by maintainers”** enabled.
 
-5. **Review:** a maintainer reviews it. CI (PHP 8.0 + 8.4 lint and smoke
+5. **Review:** a maintainer reviews it. CI (PHP 8.3 + 8.5 lint and smoke
    tests, MySQL migrations) runs after a maintainer has approved the workflow
    run. Pull requests are merged with **squash** – one commit per pull request.
 
@@ -65,7 +65,7 @@ arrives as a pull request from a fork and is reviewed before it is merged.
 
 - **No new dependencies**: PHP 8 + MySQL only; no Composer packages, no npm
   build, no CDN, no external fonts or scripts.
-- **PHP 8.0 compatible** code with `declare(strict_types=1);`, PSR-12 style.
+- **PHP 8.3 compatible** code with `declare(strict_types=1);`, PSR-12 style.
 - **Multi-language**: every UI string goes into all files in `lang/`.
 - **Instance data is sacred**: write only to `data/`, `uploads/`,
   `config/local.php` and the database; schema changes only as new,
