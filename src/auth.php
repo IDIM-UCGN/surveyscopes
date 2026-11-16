@@ -68,6 +68,16 @@ function auth_available(): bool
 
 /* ---------------------------------------------------------------- session */
 
+/**
+ * The session cookie is always "Secure", except under PHP's built-in
+ * development server (tools/dev-router.php), which only speaks plain http;
+ * there a Secure cookie would never be sent back and login could not work.
+ */
+function session_cookie_secure(): bool
+{
+    return PHP_SAPI !== 'cli-server';
+}
+
 /** Start the session (idempotent). Only login and account pages call this. */
 function session_begin(): void
 {
@@ -92,7 +102,7 @@ function session_begin(): void
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
-        'secure' => true,
+        'secure' => session_cookie_secure(),
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
@@ -167,7 +177,8 @@ function take_flash(string $key): mixed
 
 /**
  * The logged-in user, or null: ['id' (users.id), 'member_id', 'email',
- * 'is_admin' (bool), 'status', 'last_login_at']. Re-read from the database
+ * 'display_name', 'is_admin' (bool), 'create_surveys_allowed' (bool), 'status',
+ * 'last_login_at']. Re-read from the database
  * once per request; a disabled or deleted member counts as logged out.
  */
 function current_user(): ?array
@@ -216,6 +227,16 @@ function reset_current_user(): void
 function user_is_admin(?array $user): bool
 {
     return $user !== null && ($user['is_admin'] ?? false) === true;
+}
+
+/**
+ * True for a logged-in user who may create surveys: admins always, other
+ * members only with the create_surveys_allowed flag (decision 9 in
+ * docs/roles-and-invitations.md). Independent of any survey role.
+ */
+function user_can_create_surveys(?array $user): bool
+{
+    return user_is_admin($user) || ($user !== null && ($user['create_surveys_allowed'] ?? false) === true);
 }
 
 /**
@@ -464,7 +485,7 @@ function logout_user(): void
     setcookie(SS_SESSION_NAME, '', [
         'expires' => time() - 3600,
         'path' => '/',
-        'secure' => true,
+        'secure' => session_cookie_secure(),
         'httponly' => true,
         'samesite' => 'Lax',
     ]);

@@ -12,7 +12,7 @@ final class Users
     /** Account with its member's e-mail, flag and status, including password_hash, or null. */
     public static function findByEmail(string $email): ?array
     {
-        $stmt = db()->prepare('SELECT u.id, u.member_id, m.email, m.is_admin, m.status, u.password_hash, u.last_login_at
+        $stmt = db()->prepare('SELECT u.id, u.member_id, m.email, m.display_name, m.is_admin, m.create_surveys_allowed, m.status, u.password_hash, u.last_login_at
             FROM users u JOIN members m ON m.id = u.member_id
             WHERE m.email = ?');
         $stmt->execute([Members::normalizeEmail($email)]);
@@ -23,7 +23,7 @@ final class Users
     /** Account of an active member, without password_hash, or null (disabled or deleted). */
     public static function findActiveById(int $id): ?array
     {
-        $stmt = db()->prepare("SELECT u.id, u.member_id, m.email, m.is_admin, m.status, u.last_login_at
+        $stmt = db()->prepare("SELECT u.id, u.member_id, m.email, m.display_name, m.is_admin, m.create_surveys_allowed, m.status, u.last_login_at
             FROM users u JOIN members m ON m.id = u.member_id
             WHERE u.id = ? AND m.status = 'active'");
         $stmt->execute([$id]);
@@ -71,6 +71,7 @@ final class Users
         $row['id'] = (int) $row['id'];
         $row['member_id'] = (int) $row['member_id'];
         $row['is_admin'] = (int) $row['is_admin'] === 1;
+        $row['create_surveys_allowed'] = (int) $row['create_surveys_allowed'] === 1;
         return $row;
     }
 }
