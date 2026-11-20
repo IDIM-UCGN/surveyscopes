@@ -36,6 +36,7 @@ thanks.php                # confirmation after submitting
 imprint.php               # imprint, content set by site admin
 privacy.php               # privacy policy, content set by site admin
 login.php, logout.php
+setup.php                 # first administrator, enabled only while data/setup-token exists
 media.php                 # serves files from uploads/ after permission checks
 language.php              # no-JS fallback of the footer language dropdown
 sitemap.php, robots.php   # served as /sitemap.xml and /robots.txt
@@ -59,6 +60,7 @@ src/                      # PHP code, never web-accessible
   db.php                  # PDO connection + query helpers
   auth.php                # login, roles, password hashing
   csrf.php                # CSRF tokens
+  setup.php               # creating/recovering admins (setup page, tools/create-admin.php)
   i18n.php                # language detection, translation helpers
   view.php                # escaping, layout rendering, minimal markup renderer
   migrate.php             # automatic schema migrations
@@ -66,6 +68,8 @@ src/                      # PHP code, never web-accessible
   migrations/             # 0001_init.sql, 0002_….sql – forward-only
 templates/                # layout and partials (header, footer, forms); not web-accessible
 lang/                     # UI strings: de.php, en.php, …; not web-accessible
+tools/                    # dev-router.php, migrate.php, create-admin.php (command line)
+tests/                    # run.php, unit.php, db.php, http.php (see §12)
 config/
   defaults.php            # shipped defaults
   .htaccess               # Require all denied
@@ -109,7 +113,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/src/bootstrap.php';   // config, session, i18n, db (lazy), migrations
 page('surveys');                           // language from URL or redirect, sets current page
-// require_role('admin');                  // for admin pages
+// require_admin();                        // for admin pages
 
 $surveys = Surveys::publicOpen(lang());
 
@@ -296,6 +300,10 @@ Optional: `intl` (localised date/number formats).
 - `php tests/run.php` runs the unit tests (no dependencies, no database);
   `SS_TEST_DB=1 php tests/run.php` adds the database tests, which **empty the
   member and login tables** – only for a throw-away test database (CI).
+  `SS_TEST_DB=1 SS_TEST_HTTP=1 php tests/run.php` also starts PHP's built-in
+  server and tests the pages over HTTP (login, logout, setup, dashboard,
+  routing); it needs an `app_key` in `config/secrets.php` and creates and
+  removes `data/setup-token`.
 - Coding style: PSR-12, `declare(strict_types=1)`, typed parameters and returns.
 - Releases: semantic version tags `vX.Y.Z` with GitHub release notes; breaking
   changes and new config keys are listed explicitly.

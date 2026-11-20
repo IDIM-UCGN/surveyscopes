@@ -2,9 +2,14 @@
 
 declare(strict_types=1);
 
-/** @var string $headline @var string $intro @var string $more @var bool $showSurveyList @var array $surveys */
+/** @var string $headline @var string $intro @var string $more @var bool $showSurveyList @var array $surveys @var ?string $notice */
 ?>
 <main>
+<?php if (($notice ?? null) !== null): ?>
+    <div class="container pt-4">
+        <div class="alert alert-info mb-0" role="status"><?= t($notice) ?></div>
+    </div>
+<?php endif; ?>
     <section class="hero">
         <div class="container py-5">
             <div class="row">

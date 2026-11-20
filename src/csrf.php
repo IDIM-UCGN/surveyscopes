@@ -32,3 +32,17 @@ function csrf_verify(): bool
     $expected = $_SESSION['_csrf'] ?? null;
     return is_string($sent) && is_string($expected) && hash_equals($expected, $sent);
 }
+
+/**
+ * First call of every POST page: continue only with a valid token, otherwise
+ * answer HTTP 400 and stop. Needs page() to have run (language, layout).
+ */
+function csrf_require(): void
+{
+    if (csrf_verify()) {
+        return;
+    }
+    header('Cache-Control: no-store');
+    render('400', ['pageTitle' => tr('400.title'), 'noIndex' => true, 'noFollow' => true], 400);
+    exit;
+}

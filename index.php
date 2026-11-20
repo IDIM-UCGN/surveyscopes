@@ -11,6 +11,9 @@ $front = page_content('front');
 $parts = preg_split("/\R{2,}/", trim((string) ($front['body'] ?? tr('front.intro'))), 2);
 
 render('front', [
+    // One-time notice after a redirect (e.g. a signed-in member without admin access).
+    // Reads the session only if a session cookie exists, so visitors get no cookie.
+    'notice' => pending_notice(),
     'pageTitle' => $front['title'] ?? tr('front.headline'),
     'pageDescription' => $front['meta_description'] ?? '' ?: tr('front.intro'),
     'headline' => $front['title'] ?? tr('front.headline'),
