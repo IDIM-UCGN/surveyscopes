@@ -8,6 +8,7 @@ declare(strict_types=1);
             <ul class="list-inline mb-1">
                 <li class="list-inline-item"><a href="<?= e(url('imprint')) ?>"><?= t('imprint.title') ?></a></li>
                 <li class="list-inline-item"><a href="<?= e(url('privacy')) ?>"><?= t('privacy.title') ?></a></li>
+                <li class="list-inline-item"><a href="<?= e(url('login')) ?>"><?= t('footer.login') ?></a></li>
             </ul>
             <p class="mb-0 small footer-muted">
                 &copy; <?= date('Y') ?> <?= e(site_name()) ?> &middot;

@@ -118,3 +118,83 @@ test('CSRF token', function (): void {
     same(false, csrf_verify(), 'missing token');
     logout_user();
 });
+
+test('safe_next_path accepts only local admin URLs', function (): void {
+    same('/en/admin', safe_next_path('/en/admin'), 'dashboard');
+    same('/de/admin/users', safe_next_path('/de/admin/users'), 'admin sub page');
+    same('/en/admin/survey-edit', safe_next_path('/en/admin/survey-edit'), 'hyphen in page name');
+    same(null, safe_next_path(null), 'null');
+    same(null, safe_next_path(['/en/admin']), 'array');
+    same(null, safe_next_path(''), 'empty');
+    same(null, safe_next_path("/en/admin\n"), 'trailing newline');
+    same(null, safe_next_path('/en/admin%0A'), 'encoded newline');
+    same(null, safe_next_path("/en/admin\r\nSet-Cookie: x=y"), 'CRLF');
+    same(null, safe_next_path('https://evil.example'), 'absolute URL');
+    same(null, safe_next_path('//evil.example'), 'protocol-relative URL');
+    same(null, safe_next_path('/\evil.example'), 'backslash');
+    same(null, safe_next_path('/en/admin/../login'), 'dot segments');
+    same(null, safe_next_path('/en/admin/'), 'trailing slash');
+    same(null, safe_next_path('/en/login'), 'not an admin page');
+    same(null, safe_next_path('/fr/admin'), 'unsupported language');
+    same(null, safe_next_path('/en/admin?x=1'), 'query string');
+    same(null, safe_next_path('en/admin'), 'no leading slash');
+    same(null, safe_next_path('/en/admin/' . str_repeat('a', 300)), 'too long');
+});
+
+test('setup_token_age: the later of mtime and ctime counts', function (): void {
+    same(0, setup_token_age(100, 100, 100), 'brand new');
+    same(50, setup_token_age(100, 100, 150), 'equal times');
+    same(10, setup_token_age(100, 140, 150), 'ctime is later');
+    same(10, setup_token_age(140, 100, 150), 'mtime is later');
+    same(0, setup_token_age(200, 200, 100), 'clock skew is never negative');
+});
+
+test('setup_token: age, length and trimming', function (): void {
+    $path = (string) tempnam(sys_get_temp_dir(), 'sstok');
+    $token = str_repeat('a1', 20); // 40 characters
+    $limit = auth_setting('setup_token_max_age_hours') * 3600;
+
+    file_put_contents($path, $token . "\n");
+    same($token, setup_token($path), 'valid, trailing newline trimmed');
+    same(null, setup_token($path . '-missing'), 'no file');
+    same($token, setup_token($path, time() + $limit - 120), 'just inside the age limit');
+    same(null, setup_token($path, time() + $limit + 120), 'older than the limit');
+
+    touch($path, time() - 5 * $limit); // old mtime, but the file was just created or changed
+    same($token, setup_token($path), 'an old mtime alone does not expire the token');
+
+    file_put_contents($path, str_repeat('a', 31));
+    same(null, setup_token($path), '31 characters');
+    file_put_contents($path, str_repeat('a', 32) . "\r\n");
+    same(str_repeat('a', 32), setup_token($path), '32 characters');
+    file_put_contents($path, "   \n");
+    same(null, setup_token($path), 'only whitespace');
+    unlink($path);
+});
+
+test('pending_notice starts no session without a session cookie', function (): void {
+    unset($_COOKIE[SS_SESSION_NAME]);
+    same(PHP_SESSION_NONE, session_status(), 'no session before');
+    same(null, pending_notice(), 'no cookie, no notice');
+    same(PHP_SESSION_NONE, session_status(), 'still no session');
+
+    $_COOKIE[SS_SESSION_NAME] = 'test';
+    flash('notice', 'login.expired');
+    same('login.expired', pending_notice(), 'notice is delivered once');
+    same(null, pending_notice(), 'and then gone');
+    logout_user();
+    unset($_COOKIE[SS_SESSION_NAME]);
+});
+
+test('language files have the same keys, none empty', function (): void {
+    $en = require SS_ROOT . '/lang/en.php';
+    $de = require SS_ROOT . '/lang/de.php';
+    same([], array_keys(array_diff_key($en, $de)), 'keys only in en');
+    same([], array_keys(array_diff_key($de, $en)), 'keys only in de');
+    foreach ([$en, $de] as $strings) {
+        same([], array_keys(array_filter($strings, static fn ($text): bool => trim((string) $text) === '')), 'empty texts');
+    }
+    foreach (['login', 'logout', 'setup', 'admin', '400', '403', 'footer.login'] as $prefix) {
+        ok(array_filter(array_keys($en), static fn (string $k): bool => str_starts_with($k, $prefix)) !== [], 'strings for ' . $prefix);
+    }
+});

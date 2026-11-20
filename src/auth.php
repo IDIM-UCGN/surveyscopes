@@ -253,17 +253,41 @@ function require_admin(): array
     }
     if (!user_is_admin($user)) {
         header('Cache-Control: no-store');
-        if (!is_file(SS_ROOT . '/templates/403.php')) {
-            // Fallback until templates/403.php exists (added with the admin pages).
-            http_response_code(403);
-            header('Content-Type: text/plain; charset=utf-8');
-            echo "403 Forbidden\n";
-            exit;
-        }
         render('403', ['pageTitle' => tr('403.title'), 'noIndex' => true, 'noFollow' => true], 403);
         exit;
     }
     return $user;
+}
+
+/**
+ * A "next" value from a request, accepted only if it is a local admin URL
+ * of a supported language: /<lang>/admin or /<lang>/admin/<page>. Everything
+ * else (other hosts, "//host", backslashes, control characters, a trailing
+ * newline) gives null. "\z" is used because "$" would accept a trailing "\n".
+ */
+function safe_next_path(mixed $next): ?string
+{
+    if (!is_string($next) || strlen($next) > 200) {
+        return null;
+    }
+    if (preg_match('#^/([a-z]{2})/admin(?:/[a-z0-9-]+)?\z#', $next, $m) !== 1) {
+        return null;
+    }
+    return in_array($m[1], locales(), true) ? $next : null;
+}
+
+/**
+ * One-time notice (a translation key) left by an earlier request, or null.
+ * Never starts a session for visitors without a session cookie, so public
+ * pages stay cookie-free.
+ */
+function pending_notice(): ?string
+{
+    if (session_status() !== PHP_SESSION_ACTIVE && !isset($_COOKIE[SS_SESSION_NAME])) {
+        return null;
+    }
+    $key = take_flash('notice');
+    return is_string($key) ? $key : null;
 }
 
 /* ----------------------------------------------------------- throttling */

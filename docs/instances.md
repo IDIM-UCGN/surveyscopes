@@ -29,6 +29,31 @@ data**.
 5. Configuration is layered: `defaults.php` → `instance.php` → `secrets.php` → `local.php`.
 6. Releases are tagged `vX.Y.Z` with release notes listing breaking changes and new config keys.
 
+## First administrator and access recovery
+
+An instance has no accounts until the first administrator is created. This
+needs a database and an `app_key` of at least 32 characters in
+`config/secrets.php`. There are two ways, with the same result:
+
+- **Setup page, without shell access (FTP is enough).** Create the file
+  `data/setup-token` on the server and put one random value of at least 32
+  characters in it (for example from a password manager). While the file
+  exists and is at most 24 hours old, `/<lang>/setup` accepts that token, an
+  e-mail address and a password (12 characters to 72 bytes). On success the
+  account is created and **the page deletes the token file**; without the
+  file the page does not exist (404). Wrong tokens are throttled per client
+  address.
+- **Command line:** `php tools/create-admin.php <email> [--update]` prompts
+  for the password twice. The password is hidden on Linux and macOS but
+  **visible on Windows**. `SS_PASSWORD` is read only in CI (`CI=true`).
+
+Both also recover access: for an e-mail address that already exists, the
+setup page and `--update` make the member an active administrator with the
+new password and clear its login lockout. Whoever can write `data/` or run
+the command is therefore trusted at operator level, like anyone with access
+to the database. Deployments never touch `data/`, so a token file that was
+not used stays there and valid for 24 hours: delete it if you no longer need it.
+
 ## Instance repository (reference implementation)
 
 ```

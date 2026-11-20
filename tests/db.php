@@ -155,3 +155,122 @@ test('login unavailable without app_key', function (): void {
     same('unavailable', attempt_login('admin1@example.org', SS_TEST_PASSWORD), 'no app_key');
     set_config('app_key', str_repeat('t', 32));
 });
+
+test('provision_admin: beforeCommit runs before the commit and can roll everything back', function (): void {
+    $ran = false;
+    $r = provision_admin('hook1@example.org', SS_TEST_PASSWORD, false, null, function () use (&$ran): void {
+        $ran = true;
+        ok(db()->inTransaction(), 'transaction still open while the hook runs');
+    });
+    same('created', $r['result'], 'created');
+    ok($ran, 'hook ran');
+    ok(Members::findByEmail('hook1@example.org') !== null, 'committed');
+
+    $fail = function (): void {
+        throw new SetupTokenException('boom');
+    };
+    throws(SetupTokenException::class, fn () => provision_admin('hook2@example.org', SS_TEST_PASSWORD, false, null, $fail), 'hook failure is rethrown');
+    same(null, Members::findByEmail('hook2@example.org'), 'new member rolled back');
+    same(false, db()->inTransaction(), 'no transaction left open');
+
+    // A failing hook during recovery leaves the existing account untouched.
+    $id = Members::create('hook3@example.org', false, null);
+    Users::create($id, password_hash('old password 123', PASSWORD_DEFAULT));
+    throws(SetupTokenException::class, fn () => provision_admin('hook3@example.org', SS_TEST_PASSWORD, true, null, $fail), 'hook failure during recovery');
+    same(false, Members::findByEmail('hook3@example.org')['is_admin'], 'recovery rolled back: still not admin');
+    ok(password_verify('old password 123', (string) Users::findByEmail('hook3@example.org')['password_hash']), 'recovery rolled back: old password kept');
+});
+
+test('setup_run: token, validation, single use, recovery', function (): void {
+    $path = (string) tempnam(sys_get_temp_dir(), 'sstok');
+    $token = str_repeat('Tk', 20);
+    $write = static fn () => file_put_contents($path, $token . "\n");
+    $write();
+    $pw = SS_TEST_PASSWORD;
+    db()->exec('DELETE FROM login_attempts');
+
+    same('failed', setup_run('wrong', 'setup1@example.org', $pw, $pw, $path), 'wrong token');
+    same('failed', setup_run(null, 'setup1@example.org', $pw, $pw, $path), 'missing token');
+    same('failed', setup_run([$token], 'setup1@example.org', $pw, $pw, $path), 'array instead of a string');
+    same('invalid_email', setup_run($token, 'not an address', $pw, $pw, $path), 'invalid e-mail');
+    same('invalid_email', setup_run($token, 'änna@example.org', $pw, $pw, $path), 'non-ASCII e-mail');
+    same('invalid_email', setup_run($token, null, $pw, $pw, $path), 'missing e-mail');
+    same('mismatch', setup_run($token, 'setup1@example.org', $pw, $pw . 'x', $path), 'passwords differ');
+    same('too_short', setup_run($token, 'setup1@example.org', 'short', 'short', $path), 'short password');
+    same('too_long', setup_run($token, 'setup1@example.org', str_repeat('a', 73), str_repeat('a', 73), $path), '73 bytes');
+    same('invalid', setup_run($token, 'setup1@example.org', "valid but \0 nul", "valid but \0 nul", $path), 'NUL byte');
+    same(null, Members::findByEmail('setup1@example.org'), 'failed attempts create nothing');
+    ok(is_file($path), 'token file still there');
+
+    same('done', setup_run(" $token \n", 'Setup1@Example.org', $pw, $pw, $path), 'correct token (surrounding whitespace ignored)');
+    ok(!is_file($path), 'token file deleted');
+    $m = Members::findByEmail('setup1@example.org');
+    same(true, $m['is_admin'] ?? null, 'admin flag');
+    ok(($m['claimed_at'] ?? null) !== null, 'claimed_at set');
+    same('failed', setup_run($token, 'setup2@example.org', $pw, $pw, $path), 'the token cannot be used twice');
+    same(null, Members::findByEmail('setup2@example.org'), 'no second account');
+    same('ok', attempt_login('setup1@example.org', $pw), 'the new admin can log in');
+    logout_user();
+
+    // Recovery: an existing, disabled member with an account becomes an active admin with the new password.
+    $id = Members::create('setup3@example.org', false, null);
+    Users::create($id, password_hash('old password 123', PASSWORD_DEFAULT));
+    Members::markClaimed($id);
+    Members::setStatus($id, 'disabled');
+    $write();
+    same('done', setup_run($token, 'setup3@example.org', $pw, $pw, $path), 'recovery of an existing address');
+    $m = Members::findByEmail('setup3@example.org');
+    same([true, 'active'], [$m['is_admin'], $m['status']], 'recovered: admin and active');
+    same('ok', attempt_login('setup3@example.org', $pw), 'new password works');
+    logout_user();
+    same('failed', attempt_login('setup3@example.org', 'old password 123'), 'old password no longer works');
+
+    if (is_file($path)) {
+        unlink($path);
+    }
+    db()->exec('DELETE FROM login_attempts');
+});
+
+test('setup_run: throttled per client address, unavailable without app_key', function (): void {
+    $path = (string) tempnam(sys_get_temp_dir(), 'sstok');
+    $token = str_repeat('Tk', 20);
+    file_put_contents($path, $token);
+    $pw = SS_TEST_PASSWORD;
+    db()->exec('DELETE FROM login_attempts');
+
+    set_config('auth.max_attempts_setup', 3);
+    for ($i = 1; $i <= 3; $i++) {
+        same('failed', setup_run('wrong' . $i, 'throttle@example.org', $pw, $pw, $path), 'wrong token ' . $i);
+    }
+    same('throttled', setup_run('wrong4', 'throttle@example.org', $pw, $pw, $path), 'fourth attempt');
+    same('throttled', setup_run($token, 'throttle@example.org', $pw, $pw, $path), 'even the right token is refused while throttled');
+    ok(is_file($path), 'token file untouched');
+    same(null, Members::findByEmail('throttle@example.org'), 'nothing created');
+    same(3, LoginAttempts::countRecent('setup', auth_hmac('setup', client_ip_key()), 15), 'only the three wrong tokens were recorded');
+    $GLOBALS['ss_config']['auth'] = [];
+
+    db()->exec('DELETE FROM login_attempts');
+    set_config('app_key', null);
+    same('unavailable', setup_run($token, 'nokey@example.org', $pw, $pw, $path), 'no app_key');
+    set_config('app_key', str_repeat('t', 32));
+    same('done', setup_run($token, 'nokey@example.org', $pw, $pw, $path), 'works again with app_key');
+    ok(!is_file($path), 'token deleted');
+    db()->exec('DELETE FROM login_attempts');
+});
+
+test('setup_run: unwritable data directory (not on Windows or as root)', function (): void {
+    if (PHP_OS_FAMILY === 'Windows' || (function_exists('posix_geteuid') && posix_geteuid() === 0)) {
+        ok(true, 'skipped');
+        return;
+    }
+    $dir = sys_get_temp_dir() . '/ss-unwritable-' . bin2hex(random_bytes(4));
+    mkdir($dir);
+    $path = $dir . '/setup-token';
+    file_put_contents($path, str_repeat('Tk', 20));
+    chmod($dir, 0555);
+    same('not_writable', setup_run(str_repeat('Tk', 20), 'ro@example.org', SS_TEST_PASSWORD, SS_TEST_PASSWORD, $path), 'directory not writable');
+    same(null, Members::findByEmail('ro@example.org'), 'nothing created');
+    chmod($dir, 0755);
+    unlink($path);
+    rmdir($dir);
+});

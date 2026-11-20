@@ -61,6 +61,14 @@ if (preg_match('#^/[a-z]{2}/survey/([a-z0-9-]+)$#', $path, $m)) {
     $_GET['slug'] = $m[1];
     $serve('survey.php');
 }
+// Administration: /<lang>/admin -> admin/index.php, /<lang>/admin/<page> -> admin/<page>.php.
+// Without a language prefix, /admin lets PHP redirect by browser language.
+if (preg_match('#^/(?:[a-z]{2}/)?admin/?$#', $path)) {
+    $serve('admin/index.php');
+}
+if (preg_match('#^/[a-z]{2}/admin/([a-z][a-z0-9-]*)$#', $path, $m) && is_file($root . '/admin/' . $m[1] . '.php')) {
+    $serve('admin/' . $m[1] . '.php');
+}
 if (preg_match('#^/(?:[a-z]{2}/)?([a-z][a-z0-9-]*)/?$#', $path, $m) && is_file($root . '/' . $m[1] . '.php')) {
     $serve($m[1] . '.php');
 }

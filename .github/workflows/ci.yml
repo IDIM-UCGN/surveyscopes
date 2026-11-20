@@ -30,7 +30,7 @@ jobs:
         run: |
           php -S 127.0.0.1:8000 tools/dev-router.php >/dev/null 2>&1 &
           sleep 1
-          for path in /en/ /de/ /en/surveys /de/imprint /en/privacy /sitemap.xml /robots.txt; do
+          for path in /en/ /de/ /en/surveys /de/imprint /en/privacy /sitemap.xml /robots.txt /en/login /de/login; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000$path")
             echo "GET $path -> $code"; [ "$code" = 200 ] || exit 1
           done
@@ -43,6 +43,16 @@ jobs:
             code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000$path")
             echo "GET $path -> $code"; [ "$code" = 404 ] || exit 1
           done
+          # Account pages without a database: noindex, no cookie; admin redirects, setup does not exist.
+          for path in /en/login /de/login; do
+            curl -s "http://127.0.0.1:8000$path" | grep -q '<meta name="robots" content="noindex, nofollow">' || { echo "$path: robots meta missing"; exit 1; }
+          done
+          for path in /en/ /en/surveys /de/imprint /en/login; do
+            ! curl -sI "http://127.0.0.1:8000$path" | grep -qi '^set-cookie' || { echo "$path: sets a cookie"; exit 1; }
+          done
+          curl -sI http://127.0.0.1:8000/en/admin | grep -qi '^location: /en/login?next=%2Fen%2Fadmin' || { echo "/en/admin must redirect to the login page"; exit 1; }
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/en/setup)
+          echo "GET /en/setup -> $code"; [ "$code" = 404 ] || exit 1
 
   mysql:
     name: Migrations + seed (MySQL 8.4)
@@ -70,7 +80,7 @@ jobs:
       - name: Test config with seed v1
         run: |
           cat > config/secrets.php <<'EOF'
-          <?php return ['database' => ['host' => '127.0.0.1', 'port' => 3306, 'name' => 'surveyscopes', 'user' => 'ss', 'password' => 'ss']];
+          <?php return ['app_key' => 'ci-test-key-0123456789abcdef0123456789abcdef', 'database' => ['host' => '127.0.0.1', 'port' => 3306, 'name' => 'surveyscopes', 'user' => 'ss', 'password' => 'ss']];
           EOF
           cat > config/instance.php <<'EOF'
           <?php return ['seed' => ['version' => (int) (getenv('SEED_VERSION') ?: 1),
@@ -98,5 +108,5 @@ jobs:
           curl -sf http://127.0.0.1:8000/en/imprint | grep -q 'Admin imprint'
           curl -sf http://127.0.0.1:8000/en/ | grep -q '<title>Seed headline v2 – CI Instance</title>'
           if curl -sf http://127.0.0.1:8000/sitemap.xml | grep -q '/en/imprint'; then echo 'imprint must not be in sitemap'; exit 1; fi
-      - name: Unit and database tests
-        run: SS_TEST_DB=1 php tests/run.php
+      - name: Unit, database and HTTP tests
+        run: SS_TEST_DB=1 SS_TEST_HTTP=1 php tests/run.php
