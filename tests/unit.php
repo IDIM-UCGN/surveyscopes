@@ -372,7 +372,14 @@ test('mail_deliver_mail with a fake sendmail (Linux and CI only)', function (): 
     ok(in_array('To: anna@example.org', $lines, true), 'To header');
     ok(in_array('From: noreply@example.org', $lines, true), 'From header');
     ok(in_array('Content-Type: text/plain; charset=UTF-8', $lines, true), 'Content-Type header');
-    ok(count(array_filter($lines, static fn (string $l): bool => str_starts_with($l, 'Subject: =?UTF-8?B?'))) === 1, 'encoded Subject header');
+    // mbstring leaves a leading all-ASCII word unencoded ("Subject: Bitte =?UTF-8?B?...?="), so check the
+    // decoded value and that the non-ASCII part is MIME-encoded, not the exact prefix.
+    $subjects = array_values(array_filter($lines, static fn (string $l): bool => str_starts_with($l, 'Subject: ')));
+    same(1, count($subjects), 'exactly one Subject header line');
+    $subject = $subjects[0] ?? '';
+    ok(str_contains($subject, '=?UTF-8?B?'), 'Subject header is MIME-encoded');
+    ok(preg_match('/^[\x20-\x7e]*$/', $subject) === 1, 'Subject header is pure ASCII');
+    same('Bitte bestätigen – SurveyScopes', mb_decode_mimeheader(substr($subject, strlen('Subject: '))), 'Subject decodes to the original');
     same("Hallo\nhttps://example.org/en/register/abc", rtrim(str_replace("\r\n", "\n", quoted_printable_decode($body))), 'body');
 
     [$status, , $got] = $send(null);
