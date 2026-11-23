@@ -29,6 +29,25 @@ data**.
 5. Configuration is layered: `defaults.php` → `instance.php` → `secrets.php` → `local.php`.
 6. Releases are tagged `vX.Y.Z` with release notes listing breaking changes and new config keys.
 
+## Sending e-mail
+
+The application sends plain-text e-mail (for example to verify an address)
+with PHP's own `mail()`, so the server needs a working mail setup (a local
+mail transfer agent, or an SMTP server in `php.ini` on Windows). Set the
+sender in `config/instance.php` or `config/local.php`:
+
+```php
+return ['mail' => ['from' => 'noreply@your-domain.example']];
+```
+
+Without a valid `mail.from` nothing is sent. Use an address on your own
+domain and set up SPF and DKIM for it, or messages may end up in spam. The
+optional `mail.envelope_from` sets the bounce address (ignored on Windows).
+
+For development, `'mail' => ['transport' => 'log']` in `config/local.php`
+writes every message as an `.eml` file to `data/mail/` instead of sending it.
+Never use it in production: the files can contain live links.
+
 ## Instance repository (reference implementation)
 
 ```

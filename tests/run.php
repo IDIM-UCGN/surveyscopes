@@ -12,6 +12,12 @@ declare(strict_types=1);
  * the configured database. They run only with SS_TEST_DB=1, which must only
  * ever be set for a throw-away test database (as in CI).
  *
+ * Safeguard: the database tests refuse to run unless the configured database
+ * is named "test" or ends in "_test". For any other name (CI uses a throw-away
+ * database called "surveyscopes") you must confirm that exact name:
+ *
+ *   SS_TEST_DB=1 SS_TEST_DB_CONFIRM=<database name> php tests/run.php
+ *
  * Exit code 0 if all tests pass, 1 otherwise.
  */
 
@@ -28,6 +34,17 @@ require __DIR__ . '/../src/bootstrap.php';
 require __DIR__ . '/../src/setup.php';
 
 $GLOBALS['ss_tests'] = ['passed' => 0, 'failed' => [], 'current' => ''];
+
+/**
+ * May the database tests (which empty tables) run on this database? Only if it
+ * is named "test" or ends in "_test", or if SS_TEST_DB_CONFIRM names exactly
+ * this database (a deliberate, per-database confirmation).
+ */
+function test_db_allowed(string $name, ?string $confirm): bool
+{
+    return preg_match('/(?:^|_)test$/i', $name) === 1
+        || ($confirm !== null && $confirm !== '' && hash_equals($name, $confirm));
+}
 
 /** Register and run one test; an uncaught exception fails it. */
 function test(string $name, callable $fn): void
@@ -92,6 +109,16 @@ $withDb = getenv('SS_TEST_DB') === '1';
 if ($withDb) {
     if (!db_configured()) {
         fwrite(STDERR, "SS_TEST_DB=1 but no database is configured.\n");
+        exit(1);
+    }
+    $databaseName = (string) config('database.name', '');
+    $confirm = getenv('SS_TEST_DB_CONFIRM');
+    if (!test_db_allowed($databaseName, $confirm === false ? null : $confirm)) {
+        fwrite(STDERR, "REFUSING to run the database tests on the database \"$databaseName\".\n"
+            . "These tests EMPTY the members, users and login_attempts tables, and the name does not\n"
+            . "look like a test database (it must be \"test\" or end in \"_test\").\n"
+            . "Use a separate test database, or, if this one really is throw-away, confirm its exact name:\n"
+            . "  SS_TEST_DB=1 SS_TEST_DB_CONFIRM=$databaseName php tests/run.php\n");
         exit(1);
     }
     require __DIR__ . '/db.php';

@@ -59,6 +59,7 @@ src/                      # PHP code, never web-accessible
   db.php                  # PDO connection + query helpers
   auth.php                # login, roles, password hashing
   csrf.php                # CSRF tokens
+  mail.php                # send_mail(): PHP mail() or, for development, a log transport
   i18n.php                # language detection, translation helpers
   view.php                # escaping, layout rendering, minimal markup renderer
   migrate.php             # automatic schema migrations
@@ -281,6 +282,15 @@ return [
   `finfo`, size-limited, served only via `media.php` after permission checks,
   with `Content-Disposition` and `X-Content-Type-Options: nosniff`.
 - No cookies besides the session cookie; no tracking; no third-party requests.
+- Mail (`src/mail.php`): plain text through PHP's `mail()`, no library and no
+  external service. Recipient and sender (`mail.from`) must be valid ASCII
+  addresses without line breaks; every header is fixed by the code, the only
+  request-derived header value is the cleaned subject; without a valid
+  `mail.from` nothing is sent. The `log` transport (`mail.transport`) writes
+  the message to `data/mail/` (mode 0600, closed to the web) instead of
+  sending it, for development and tests only, because the files can contain
+  live links. `mail()` returning true means "handed to the mail server", not
+  "delivered": operators need SPF and DKIM for the sender domain.
 
 ## 11. PHP extensions
 
@@ -295,7 +305,9 @@ Optional: `intl` (localised date/number formats).
 - `php tools/migrate.php` applies migrations from the command line.
 - `php tests/run.php` runs the unit tests (no dependencies, no database);
   `SS_TEST_DB=1 php tests/run.php` adds the database tests, which **empty the
-  member and login tables** – only for a throw-away test database (CI).
+  member and login tables** – only for a throw-away test database (CI). The
+  runner refuses any database whose name is not `test` or does not end in
+  `_test`, unless you confirm that exact name with `SS_TEST_DB_CONFIRM=<name>`.
 - Coding style: PSR-12, `declare(strict_types=1)`, typed parameters and returns.
 - Releases: semantic version tags `vX.Y.Z` with GitHub release notes; breaking
   changes and new config keys are listed explicitly.

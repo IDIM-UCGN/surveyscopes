@@ -30,6 +30,7 @@ require __DIR__ . '/repositories/Users.php';
 require __DIR__ . '/repositories/LoginAttempts.php';
 require __DIR__ . '/auth.php'; // no session here: only login and account pages start one
 require __DIR__ . '/csrf.php';
+require __DIR__ . '/mail.php';
 
 $GLOBALS['ss_config'] = load_config(SS_ROOT . '/config');
 date_default_timezone_set((string) config('timezone', 'UTC'));
@@ -37,6 +38,12 @@ date_default_timezone_set((string) config('timezone', 'UTC'));
 // Uncaught errors: log details, show a neutral page (no internals to visitors).
 set_exception_handler(static function (Throwable $e): void {
     error_log('[surveyscopes] ' . $e::class . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    if (PHP_SAPI === 'cli') {
+        // Command line (tests, tools/): no HTML page, and a non-zero exit code so that
+        // scripts and CI notice the failure. The details were logged above.
+        fwrite(STDERR, 'surveyscopes: startup failed: ' . $e::class . "\n");
+        exit(1);
+    }
     if (!headers_sent()) {
         http_response_code(503);
         header('Retry-After: 120');
