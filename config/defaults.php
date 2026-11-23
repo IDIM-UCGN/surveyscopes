@@ -59,6 +59,23 @@ return [
         'setup_token_max_age_hours' => 24,
     ],
 
+    /*
+     * Mail (src/mail.php). transport: 'mail' = PHP's mail() (the default) or
+     * 'log' = write .eml files instead of sending, for development and tests
+     * only (the files can contain live links); any other value sends nothing.
+     * from: sender address, required (a valid ASCII address): without it
+     * nothing is sent, so a fresh instance sends no mail until an operator
+     * sets it in config/instance.php or config/local.php. envelope_from:
+     * optional bounce address, passed to the mail transfer agent with -f.
+     * log_dir: directory of the log transport; null = data/mail.
+     */
+    'mail' => [
+        'transport' => 'mail',
+        'from' => null,
+        'envelope_from' => null,
+        'log_dir' => null,
+    ],
+
     'app_key' => null,
     'database' => null,
 ];

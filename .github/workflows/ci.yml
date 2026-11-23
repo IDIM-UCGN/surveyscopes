@@ -99,4 +99,6 @@ jobs:
           curl -sf http://127.0.0.1:8000/en/ | grep -q '<title>Seed headline v2 – CI Instance</title>'
           if curl -sf http://127.0.0.1:8000/sitemap.xml | grep -q '/en/imprint'; then echo 'imprint must not be in sitemap'; exit 1; fi
       - name: Unit and database tests
-        run: SS_TEST_DB=1 php tests/run.php
+        # The throw-away CI database is called "surveyscopes", so it is confirmed by name
+        # (the runner refuses database names that do not end in _test otherwise).
+        run: SS_TEST_DB=1 SS_TEST_DB_CONFIRM=surveyscopes php tests/run.php
